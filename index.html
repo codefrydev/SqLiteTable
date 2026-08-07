@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SqLite Table</title>
+    <script src="https://unpkg.com/vis-network/standalone/umd/vis-network.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/sql-wasm.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            display: flex;
+            flex-direction: column;
+            background-color: #09090b;
+            color: #e4e4e7;
+        }
+        .topbar {
+            background: rgba(9, 9, 11, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border-bottom: 1px solid #27272a;
+            padding: 16px 32px;
+            color: #e4e4e7;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
+            z-index: 20;
+        }
+        .topbar h1 { margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; display: flex; align-items: center; gap: 12px; }
+        .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; }
+        .upload-btn-wrapper .btn {
+            border: 1px solid #3f3f46;
+            color: #e4e4e7;
+            background-color: #18181b;
+            padding: 10px 24px;
+            border-radius: 9999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+        }
+        .upload-btn-wrapper:hover .btn {
+            background-color: #27272a;
+            border-color: #52525b;
+            color: #ffffff;
+            transform: translateY(-1px);
+        }
+        .upload-btn-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
+        #main-content { display: flex; flex-grow: 1; height: calc(100% - 69px); position: relative; }
+        #network-container {
+            flex-grow: 1;
+            height: 100%;
+            position: relative;
+            background: radial-gradient(circle, transparent 20%, #09090b 20%, #09090b 80%, transparent 80%, transparent), radial-gradient(circle, transparent 20%, #09090b 20%, #09090b 80%, transparent 80%, transparent) 25px 25px, linear-gradient(#18181b 2px, transparent 2px) 0 -1px, linear-gradient(90deg, #18181b 2px, #09090b 2px) -1px 0;
+            background-size: 50px 50px, 50px 50px, 25px 25px, 25px 25px;
+        }
+        #mynetwork { width: 100%; height: 100%; }
+        #sidebar {
+            width: 400px;
+            height: 100%;
+            background: rgba(9, 9, 11, 0.95);
+            backdrop-filter: blur(8px);
+            border-left: 1px solid #27272a;
+            box-shadow: -10px 0 20px -10px rgba(0,0,0,0.5);
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        .header { padding: 32px 24px 24px; background: transparent; color: #e4e4e7; border-bottom: 1px solid #18181b; text-align: left; }
+        .header h2 { margin: 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.025em; }
+        .header p { margin: 8px 0 0; font-size: 0.95rem; color: #a1a1aa; }
+        #details { padding: 24px; }
+        .table-name { font-size: 1.75rem; font-weight: 700; color: #ffffff; margin-bottom: 24px; letter-spacing: -0.025em; display: inline-block; border-bottom: none; padding-bottom: 0; }
+        .column-list { list-style: none; padding: 0; margin: 0; }
+        .column-item {
+            padding: 12px 16px;
+            margin-bottom: 12px;
+            background: #18181b;
+            border-radius: 8px;
+            overflow: hidden;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border: 1px solid #27272a;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+            transition: all 0.2s ease;
+        }
+        .column-item:hover { transform: translateX(4px); border-color: #3f3f46; background: #27272a; }
+        .column-name { font-weight: 600; color: #e4e4e7; }
+        .column-type { color: #a1a1aa; font-size: 0.75rem; font-weight: 600; background: #09090b; padding: 4px 8px; border-radius: 6px; text-transform: uppercase; letter-spacing: 0.05em; border: 1px solid #27272a; }
+        .column-pk { color: #ffffff; font-size: 0.7rem; font-weight: 700; margin-left: 8px; background: #27272a; padding: 2px 8px; border-radius: 9999px; }
+        .column-fk { color: #d4d4d8; font-size: 0.7rem; font-weight: 700; margin-left: 8px; background: #18181b; border: 1px solid #3f3f46; padding: 2px 8px; border-radius: 9999px; }
+        .empty-state { text-align: center; color: #71717a; margin-top: 100px; font-size: 1rem; font-weight: 500; }
+        .empty-icon { font-size: 3rem; margin-bottom: 16px; filter: grayscale(100%) opacity(0.2); }
+        .relation-section { margin-top: 32px; background: #18181b; padding: 20px; border-radius: 12px; border: 1px solid #27272a; }
+        .relation-section.incoming { background: #09090b; border-style: dashed; }
+        .relation-title { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; color: #a1a1aa; margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+        .relation-section.incoming .relation-title { color: #71717a; }
+        .relation-tag {
+            display: inline-block;
+            background: #18181b;
+            color: #d4d4d8;
+            padding: 6px 14px;
+            border-radius: 9999px;
+            font-size: 0.85rem;
+            margin: 4px 6px 4px 0;
+            border: 1px solid #3f3f46;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        .relation-tag:hover { background: #3f3f46; color: #ffffff; border-color: #52525b; transform: translateY(-1px); }
+        .instructions {
+            position: absolute;
+            top: 24px;
+            left: 24px;
+            background: rgba(24, 24, 27, 0.9);
+            backdrop-filter: blur(12px);
+            padding: 20px 24px;
+            border-radius: 12px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.5);
+            border: 1px solid #3f3f46;
+            pointer-events: none;
+            z-index: 10;
+        }
+        .instructions h3 { margin: 0 0 8px 0; font-size: 1.1rem; font-weight: 700; color: #ffffff; letter-spacing: -0.025em; }
+        .instructions p { margin: 4px 0; color: #a1a1aa; font-size: 0.9rem; font-weight: 500; }
+        #loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(9, 9, 11, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+            font-size: 1.25rem;
+            color: #e4e4e7;
+            font-weight: 600;
+        }
+        .spinner {
+            border: 3px solid #27272a;
+            width: 48px; height: 48px;
+            border-radius: 50%;
+            border-left-color: #ffffff;
+            animation: spin 1s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+            margin-bottom: 20px;
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body.drag-over::after {
+            content: "Drop SQLite database here";
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(9, 9, 11, 0.95);
+            backdrop-filter: blur(10px);
+            color: #ffffff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2.5rem;
+            font-weight: 700;
+            z-index: 100;
+            border: 4px dashed #3f3f46;
+            box-sizing: border-box;
+            margin: 24px;
+            border-radius: 24px;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    
+    <div class="topbar">
+        <h1>🔍 SqLite Table</h1>
+        <div class="upload-btn-wrapper">
+            <button class="btn">📁 Upload .sqlite / .db File</button>
+            <input type="file" id="db-upload" accept=".sqlite,.db,.sqlite3" />
+        </div>
+    </div>
+
+    <div id="main-content">
+        <div id="loading-overlay">
+            <div class="spinner"></div>
+            <div>Analyzing Database...</div>
+        </div>
+
+        <div id="network-container">
+            <div class="instructions" id="instructions-panel">
+                <h3>Awaiting Database...</h3>
+                <p>Upload a SQLite file in the top right.</p>
+            </div>
+            <div id="mynetwork"></div>
+        </div>
+
+        <div id="sidebar">
+            <div class="header">
+                <h2 id="sidebar-title">Table Details</h2>
+                <p id="sidebar-subtitle">Select a table to see its structure</p>
+            </div>
+            <div id="details">
+                <div class="empty-state">
+                    <div class="empty-icon">📂</div>
+                    Upload a database file first,<br>then click tables to view details.
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let schema = { tables: [] };
+        let network = null;
+        let sqlPromise = null;
+        
+        // Initialize sql.js WebAssembly Module
+        window.onload = function() {
+            sqlPromise = initSqlJs({
+                locateFile: file => `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.8.0/${file}`
+            });
+        };
+
+        const dbUpload = document.getElementById('db-upload');
+        dbUpload.addEventListener('change', (event) => {
+            const file = event.target.files[0];
+            if (file) processFile(file);
+        });
+
+        // Drag and Drop global handlers
+        ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+            document.body.addEventListener(eventName, preventDefaults, false);
+        });
+
+        function preventDefaults(e) {
+            e.preventDefault();
+            e.stopPropagation();
+        }
+
+        document.body.addEventListener('dragover', (e) => {
+            document.body.classList.add('drag-over');
+        });
+        
+        document.body.addEventListener('dragleave', (e) => {
+            if (e.relatedTarget === null) {
+                document.body.classList.remove('drag-over');
+            }
+        });
+        
+        document.body.addEventListener('drop', (e) => {
+            document.body.classList.remove('drag-over');
+            const file = e.dataTransfer.files[0];
+            if (file) processFile(file);
+        });
+
+        async function processFile(file) {
+            console.log("processFile triggered for:", file.name, "Size:", file.size, "Type:", file.type);
+            document.getElementById('loading-overlay').style.display = 'flex';
+            
+            try {
+                console.log("Awaiting SQL.js initialization...");
+                const SQL = await sqlPromise;
+                console.log("SQL.js initialized successfully:", SQL);
+                
+                const reader = new FileReader();
+                reader.onload = function() {
+                    console.log("File read completely. ArrayBuffer byteLength:", reader.result.byteLength);
+                    try {
+                        const Uints = new Uint8Array(reader.result);
+                        console.log("Initializing SQL.Database with byte array...");
+                        const db = new SQL.Database(Uints);
+                        console.log("SQL.Database initialized successfully.");
+                        parseDatabase(db, file.name);
+                    } catch(err) {
+                        console.error("Error parsing Database (inner catch):", err);
+                        alert("Error parsing Database: " + err.message);
+                        document.getElementById('loading-overlay').style.display = 'none';
+                    }
+                };
+                
+                console.log("Starting reader.readAsArrayBuffer...");
+                reader.readAsArrayBuffer(file);
+            } catch (error) {
+                console.error("Error loading SQLite db (outer catch):", error);
+                alert("Failed to initialize SQLite engine: " + error.message);
+                document.getElementById('loading-overlay').style.display = 'none';
+            }
+        }
+
+        function parseDatabase(db, fileName) {
+            console.log("parseDatabase started for:", fileName);
+            schema = { tables: [] };
+            
+            // Exclude internal SQLite tables and EF Core Migrations
+            const query = `
+                SELECT name FROM sqlite_master 
+                WHERE type='table' 
+                AND name NOT LIKE 'sqlite_%' 
+                AND name != '__EFMigrationsHistory'
+            `;
+            
+            console.log("Executing master query to find tables...");
+            const tableResult = db.exec(query);
+            console.log("tableResult from sqlite_master:", tableResult);
+            
+            if (tableResult.length === 0) {
+                console.warn("No tables found! sqlite_master returned empty.");
+                alert("No readable tables found in this database.");
+                document.getElementById('loading-overlay').style.display = 'none';
+                return;
+            }
+            
+            const tableNames = tableResult[0].values.map(v => v[0]);
+            console.log("Found tables:", tableNames);
+            
+            // Beautiful pastel colors for nodes
+            const colors = ["#48bb78", "#4299e1", "#ed8936", "#9f7aea", "#ecc94b", "#f56565", "#fc8181", "#f6ad55", "#e53e3e", "#38a169", "#dd6b20", "#805ad5", "#3182ce", "#d69e2e", "#718096"];
+            
+            tableNames.forEach((tableName, index) => {
+                const tableObj = {
+                    id: tableName,
+                    label: tableName,
+                    color: colors[index % colors.length],
+                    columns: []
+                };
+                
+                // Get Columns
+                const pragmaInfo = db.exec(`PRAGMA table_info("${tableName}")`);
+                if (pragmaInfo.length > 0) {
+                    pragmaInfo[0].values.forEach(col => {
+                        tableObj.columns.push({
+                            name: col[1],
+                            type: col[2] || "UNKNOWN",
+                            isPk: col[5] === 1 // Column 5 is 'pk' (1 if part of primary key)
+                        });
+                    });
+                }
+                
+                // Get Foreign Keys
+                const pragmaFk = db.exec(`PRAGMA foreign_key_list("${tableName}")`);
+                if (pragmaFk.length > 0) {
+                    pragmaFk[0].values.forEach(fk => {
+                        const toTable = fk[2]; // table it points to
+                        const fromCol = fk[3]; // column in this table
+                        
+                        const column = tableObj.columns.find(c => c.name === fromCol);
+                        if (column) {
+                            column.fk = toTable;
+                        }
+                    });
+                }
+                
+                schema.tables.push(tableObj);
+            });
+            
+            console.log("Finished parsing all tables. Total tables added:", schema.tables.length);
+            db.close();
+            
+            document.getElementById('instructions-panel').innerHTML = `
+                <h3>${fileName} loaded!</h3>
+                <p>👆 <b>Click</b> a bubble to see its columns</p>
+                <p>✋ <b>Drag</b> bubbles to rearrange</p>
+                <p>🔍 <b>Scroll</b> to zoom in/out</p>
+            `;
+            
+            document.getElementById('sidebar-title').innerText = "Schema Details";
+            document.getElementById('sidebar-subtitle').innerText = `${tableNames.length} tables found`;
+            
+            console.log("Calling renderNetwork()...");
+            renderNetwork();
+            document.getElementById('loading-overlay').style.display = 'none';
+        }
+
+        function renderNetwork() {
+            if (network !== null) {
+                network.destroy();
+                network = null;
+            }
+
+            const nodes = new vis.DataSet(schema.tables.map(t => ({
+                id: t.id,
+                label: t.id,
+                color: { background: t.color, border: "transparent", hover: { background: t.color, border: "rgba(0,0,0,0.2)" } },
+                font: { color: "#ffffff", face: "Inter", size: 16, multi: true, bold: true },
+                shape: "box",
+                margin: 16,
+                borderWidth: 1,
+                shadow: { enabled: true, color: 'rgba(15, 23, 42, 0.08)', size: 10, x: 0, y: 4 }
+            })));
+
+            const edgesList = [];
+            schema.tables.forEach(table => {
+                table.columns.forEach(col => {
+                    if(col.fk) {
+                        edgesList.push({
+                            from: table.id,
+                            to: col.fk,
+                            arrows: { to: { enabled: true, scaleFactor: 0.8 } },
+                            color: { color: "#52525b", highlight: "#ffffff" },
+                            smooth: { type: "cubicBezier", roundness: 0.4 }
+                        });
+                    }
+                });
+            });
+            
+            const edges = new vis.DataSet(edgesList);
+            const container = document.getElementById('mynetwork');
+            const data = { nodes: nodes, edges: edges };
+            
+            const options = {
+                interaction: { hover: true, tooltipDelay: 200 },
+                physics: {
+                    solver: 'forceAtlas2Based',
+                    forceAtlas2Based: { gravitationalConstant: -80, centralGravity: 0.01, springLength: 200, springConstant: 0.08 }
+                }
+            };
+
+            network = new vis.Network(container, data, options);
+
+            network.on("click", function (params) {
+                if (params.nodes.length > 0) {
+                    showDetails(params.nodes[0]);
+                } else {
+                    // Clicked empty space
+                    document.getElementById('details').innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">👆</div>
+                            Click a table bubble to view its details.
+                        </div>
+                    `;
+                }
+            });
+            
+            // Clear details view
+            document.getElementById('details').innerHTML = `
+                <div class="empty-state">
+                    <div class="empty-icon">👆</div>
+                    Click a table bubble to view its details.
+                </div>
+            `;
+        }
+
+        window.focusNode = function(nodeId) {
+            network.focus(nodeId, { scale: 1.2, animation: { duration: 500, easingFunction: "easeInOutQuad" } });
+            network.selectNodes([nodeId]);
+            showDetails(nodeId);
+        }
+
+        function showDetails(nodeId) {
+            const table = schema.tables.find(t => t.id === nodeId);
+            if (!table) return;
+
+            const detailsDiv = document.getElementById('details');
+            const outgoingLinks = table.columns.filter(c => c.fk);
+            
+            const incomingLinks = [];
+            schema.tables.forEach(t => {
+                t.columns.forEach(c => {
+                    if (c.fk === nodeId) incomingLinks.push({ table: t.id, column: c.name });
+                });
+            });
+
+            let html = `<div class="table-name" style="color: ${table.color}; text-shadow: 0 0 20px ${table.color}40;">${table.id}</div>`;
+            html += `<ul class="column-list">`;
+            
+            table.columns.forEach(col => {
+                html += `
+                    <li class="column-item" style="border-left: 4px solid ${table.color};">
+                        <div>
+                            <span class="column-name">${col.name}</span>
+                            ${col.isPk ? `<span class="column-pk" style="background-color: ${table.color}; color: #ffffff;">PK</span>` : ''}
+                            ${col.fk ? `<span class="column-fk" style="border-color: ${table.color}80; color: ${table.color}; background-color: ${table.color}15;">FK ➔ ${col.fk}</span>` : ''}
+                        </div>
+                        <span class="column-type" style="color: ${table.color}; border-color: ${table.color}40; background-color: ${table.color}15;">${col.type}</span>
+                    </li>
+                `;
+            });
+            html += `</ul>`;
+
+            if (outgoingLinks.length > 0) {
+                html += `
+                    <div class="relation-section">
+                        <div class="relation-title">Belongs To (Sends data to)</div>
+                        <div>${outgoingLinks.map(l => `<span class="relation-tag" onclick="focusNode('${l.fk}')">${l.fk}</span>`).join('')}</div>
+                    </div>
+                `;
+            }
+
+            if (incomingLinks.length > 0) {
+                const uniqueIncoming = [...new Set(incomingLinks.map(l => l.table))];
+                html += `
+                    <div class="relation-section incoming">
+                        <div class="relation-title">Referenced By (Receives data from)</div>
+                        <div>${uniqueIncoming.map(t => `<span class="relation-tag" onclick="focusNode('${t}')">${t}</span>`).join('')}</div>
+                    </div>
+                `;
+            }
+
+            detailsDiv.innerHTML = html;
+        }
+    </script>
+</body>
+</html>
+
