@@ -64,6 +64,7 @@
             flex-direction: column;
             background-color: #09090b;
             color: #e4e4e7;
+            overflow: hidden;
         }
         .topbar {
             background: rgba(9, 9, 11, 0.75);
@@ -77,6 +78,7 @@
             align-items: center;
             box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.5);
             z-index: 20;
+            flex-shrink: 0;
         }
         .topbar h1 { margin: 0; font-size: 1.25rem; font-weight: 700; letter-spacing: -0.025em; display: flex; align-items: center; gap: 12px; }
         .upload-btn-wrapper { position: relative; overflow: hidden; display: inline-block; }
@@ -99,7 +101,13 @@
             transform: translateY(-1px);
         }
         .upload-btn-wrapper input[type=file] { font-size: 100px; position: absolute; left: 0; top: 0; opacity: 0; cursor: pointer; }
-        #main-content { display: flex; flex-grow: 1; height: calc(100% - 69px); position: relative; }
+        #main-content { 
+            display: flex; 
+            flex-grow: 1; 
+            height: 0; 
+            position: relative; 
+            overflow: hidden; 
+        }
         #network-container {
             flex-grow: 1;
             height: 100%;
@@ -221,15 +229,280 @@
             border-radius: 24px;
             pointer-events: none;
         }
+
+        /* New styles for query editor */
+        .tabs {
+            display: flex;
+            gap: 16px;
+            margin-right: auto;
+            margin-left: 32px;
+        }
+        .tab-btn {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            padding: 8px 16px;
+            border-radius: 8px;
+            transition: all 0.2s ease;
+        }
+        .tab-btn.active {
+            color: #ffffff;
+            background: #27272a;
+        }
+        .tab-btn:hover:not(.active) {
+            color: #e4e4e7;
+            background: #18181b;
+        }
+        .topbar-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+        .btn-primary {
+            background-color: #3b82f6;
+            color: white;
+            border: none;
+            padding: 10px 24px;
+            border-radius: 9999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.5);
+        }
+        .btn-primary:hover {
+            background-color: #2563eb;
+            transform: translateY(-1px);
+        }
+        .btn-secondary {
+            background-color: #27272a;
+            color: white;
+            border: 1px solid #3f3f46;
+            padding: 10px 24px;
+            border-radius: 9999px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .btn-secondary:hover {
+            background-color: #3f3f46;
+        }
+        #query-container {
+            display: none;
+            flex-grow: 1;
+            height: 100%;
+            flex-direction: column;
+            padding: 24px;
+            box-sizing: border-box;
+            gap: 24px;
+        }
+        .query-editor-wrapper {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            background: rgba(9, 9, 11, 0.75);
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .query-textarea {
+            width: 100%;
+            min-height: 150px;
+            background: #18181b;
+            border: 1px solid #3f3f46;
+            color: #e4e4e7;
+            border-radius: 8px;
+            padding: 16px;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 1rem;
+            resize: vertical;
+            box-sizing: border-box;
+        }
+        .query-textarea:focus {
+            outline: none;
+            border-color: #52525b;
+        }
+        .query-actions {
+            display: flex;
+            justify-content: flex-end;
+        }
+        .query-results-wrapper {
+            flex-grow: 1;
+            background: rgba(9, 9, 11, 0.75);
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 16px;
+            overflow: auto;
+            display: flex;
+            flex-direction: column;
+        }
+        .results-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .results-table th, .results-table td {
+            padding: 12px 16px;
+            text-align: left;
+            border-bottom: 1px solid #27272a;
+        }
+        .results-table th {
+            font-weight: 600;
+            color: #a1a1aa;
+            background: #18181b;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+        }
+        .results-table tr:hover td {
+            background: #18181b;
+        }
+        .error-msg {
+            color: #f56565;
+            background: #2d1818;
+            padding: 16px;
+            border-radius: 8px;
+            border: 1px solid #742a2a;
+            margin-top: 16px;
+        }
+
+        /* Styles for Data Editor */
+        #data-editor-container {
+            display: none;
+            flex-grow: 1;
+            height: 100%;
+            flex-direction: column;
+            padding: 24px;
+            box-sizing: border-box;
+            gap: 16px;
+            min-width: 0;
+            overflow: hidden;
+        }
+        .data-editor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(9, 9, 11, 0.75);
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 16px;
+        }
+        .data-editor-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #ffffff;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            flex-shrink: 0;
+        }
+        .pagination-controls button {
+            background: #18181b;
+            color: #e4e4e7;
+            border: 1px solid #3f3f46;
+            padding: 6px 12px;
+            border-radius: 6px;
+            cursor: pointer;
+        }
+        .pagination-controls button:hover {
+            background: #27272a;
+        }
+        .data-grid-wrapper {
+            flex-grow: 1;
+            background: rgba(9, 9, 11, 0.75);
+            border: 1px solid #27272a;
+            border-radius: 12px;
+            padding: 0;
+            overflow: auto;
+        }
+        .data-grid {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        .data-grid th, .data-grid td {
+            padding: 10px 14px;
+            text-align: left;
+            border-right: 1px solid #27272a;
+            border-bottom: 1px solid #27272a;
+            white-space: nowrap;
+        }
+        .data-grid th:last-child, .data-grid td:last-child {
+            border-right: none;
+        }
+        .data-grid th {
+            font-weight: 600;
+            color: #a1a1aa;
+            background: #18181b;
+            position: sticky;
+            top: 0;
+            z-index: 1;
+            box-shadow: 0 1px 0 #27272a;
+        }
+        .data-grid th:first-child, .data-grid td:first-child {
+            position: sticky;
+            left: 0;
+            z-index: 2;
+            background: #09090b;
+            border-right: 1px solid #27272a;
+        }
+        .data-grid th:first-child {
+            z-index: 3;
+            background: #18181b;
+        }
+        .data-grid td.editable {
+            cursor: text;
+            background: rgba(255,255,255,0.01);
+        }
+        .data-grid td.editable:hover {
+            background: rgba(255,255,255,0.05);
+        }
+        .data-grid td.editable:focus {
+            outline: 2px solid #3b82f6;
+            outline-offset: -2px;
+            background: #18181b;
+        }
+        .action-btn {
+            background: transparent;
+            border: none;
+            color: #a1a1aa;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+        .action-btn:hover {
+            color: #f56565;
+            background: #2d1818;
+        }
     </style>
 </head>
 <body>
     
     <div class="topbar">
         <h1>🔍 SqLite Table</h1>
-        <div class="upload-btn-wrapper">
-            <button class="btn">📁 Upload .sqlite / .db File</button>
-            <input type="file" id="db-upload" accept=".sqlite,.db,.sqlite3" />
+        
+        <div class="tabs" id="nav-tabs" style="display: none;">
+            <button class="tab-btn active" onclick="switchTab(event, 'schema')">Schema Graph</button>
+            <button class="tab-btn" id="tab-data-editor" onclick="switchTab(event, 'data-editor')">Data Editor</button>
+            <button class="tab-btn" onclick="switchTab(event, 'query')">SQL Query</button>
+        </div>
+
+        <div class="topbar-actions">
+            <button id="export-btn" class="btn-secondary" style="display: none;" onclick="exportDatabase()">💾 Export DB</button>
+            <div class="upload-btn-wrapper">
+                <button class="btn">📁 Upload .sqlite / .db File</button>
+                <input type="file" id="db-upload" accept=".sqlite,.db,.sqlite3" />
+            </div>
         </div>
     </div>
 
@@ -246,6 +519,43 @@
             </div>
             <div id="mynetwork"></div>
         </div>
+        
+        <!-- NEW QUERY CONTAINER -->
+        <div id="query-container">
+            <div class="query-editor-wrapper">
+                <textarea id="query-input" class="query-textarea" placeholder="Enter SQL query here... (e.g., SELECT * FROM table_name)"></textarea>
+                <div class="query-actions">
+                    <button class="btn-primary" onclick="runQuery()">▶ Run Query</button>
+                </div>
+            </div>
+            <div class="query-results-wrapper" id="query-results">
+                <div class="empty-state" style="margin-top: 50px;">
+                    <div class="empty-icon">⌨️</div>
+                    Run a query to see results here.
+                </div>
+            </div>
+        </div>
+        <!-- END NEW QUERY CONTAINER -->
+        
+        <!-- NEW DATA EDITOR CONTAINER -->
+        <div id="data-editor-container">
+            <div class="data-editor-header">
+                <div class="data-editor-title" id="editor-table-title">Select a table to view data</div>
+                <div class="pagination-controls">
+                    <button onclick="addRow()" class="btn-primary" style="padding: 6px 12px; margin-right: 16px;">+ Add Row</button>
+                    <button onclick="prevPage()">◀ Prev</button>
+                    <span id="pagination-info" style="color: #a1a1aa; font-size: 0.9rem;">Page 1</span>
+                    <button onclick="nextPage()">Next ▶</button>
+                </div>
+            </div>
+            <div class="data-grid-wrapper" id="data-grid-content">
+                <div class="empty-state" style="margin-top: 50px;">
+                    <div class="empty-icon">🖱️</div>
+                    Select a table from the Schema Graph to view its data.
+                </div>
+            </div>
+        </div>
+        <!-- END NEW DATA EDITOR CONTAINER -->
 
         <div id="sidebar">
             <div class="header">
@@ -265,6 +575,7 @@
         let schema = { tables: [] };
         let network = null;
         let sqlPromise = null;
+        let currentDb = null;
         
         // Initialize sql.js WebAssembly Module
         window.onload = function() {
@@ -320,9 +631,17 @@
                     try {
                         const Uints = new Uint8Array(reader.result);
                         console.log("Initializing SQL.Database with byte array...");
-                        const db = new SQL.Database(Uints);
+                        
+                        if (currentDb) {
+                            try { currentDb.close(); } catch(e) {}
+                        }
+                        
+                        currentDb = new SQL.Database(Uints);
                         console.log("SQL.Database initialized successfully.");
-                        parseDatabase(db, file.name);
+                        parseDatabase(currentDb, file.name);
+                        
+                        document.getElementById('nav-tabs').style.display = 'flex';
+                        document.getElementById('export-btn').style.display = 'block';
                     } catch(err) {
                         console.error("Error parsing Database (inner catch):", err);
                         alert("Error parsing Database: " + err.message);
@@ -406,7 +725,7 @@
             });
             
             console.log("Finished parsing all tables. Total tables added:", schema.tables.length);
-            db.close();
+            // db.close(); // Keep it open for queries
             
             document.getElementById('instructions-panel').innerHTML = `
                 <h3>${fileName} loaded!</h3>
@@ -548,7 +867,288 @@
                 `;
             }
 
+            html += `
+                <button class="btn-primary" style="width: 100%; margin-top: 24px;" onclick="openVisualEditor('${table.id}')">👁 View & Edit Data</button>
+            `;
+
             detailsDiv.innerHTML = html;
+        }
+
+        function switchTab(event, tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            if (event) event.target.classList.add('active');
+            
+            if (tabId === 'schema') {
+                document.getElementById('network-container').style.display = 'block';
+                document.getElementById('sidebar').style.display = 'flex';
+                document.getElementById('query-container').style.display = 'none';
+                document.getElementById('data-editor-container').style.display = 'none';
+            } else if (tabId === 'query') {
+                document.getElementById('network-container').style.display = 'none';
+                document.getElementById('sidebar').style.display = 'none';
+                document.getElementById('query-container').style.display = 'flex';
+                document.getElementById('data-editor-container').style.display = 'none';
+            } else if (tabId === 'data-editor') {
+                document.getElementById('network-container').style.display = 'none';
+                document.getElementById('sidebar').style.display = 'none';
+                document.getElementById('query-container').style.display = 'none';
+                document.getElementById('data-editor-container').style.display = 'flex';
+            }
+        }
+
+        let currentEditorTable = null;
+        let currentEditorPage = 0;
+        const ROWS_PER_PAGE = 50;
+        
+        function openVisualEditor(tableName) {
+            currentEditorTable = tableName;
+            currentEditorPage = 0;
+            
+            switchTab(null, 'data-editor');
+            document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('tab-data-editor').classList.add('active');
+            
+            loadTableData();
+        }
+        
+        function loadTableData() {
+            if (!currentDb || !currentEditorTable) return;
+            
+            const offset = currentEditorPage * ROWS_PER_PAGE;
+            const gridDiv = document.getElementById('data-grid-content');
+            
+            document.getElementById('editor-table-title').innerText = `Table: ${currentEditorTable}`;
+            
+            const tableMeta = schema.tables.find(t => t.id === currentEditorTable);
+            const pkCols = tableMeta ? tableMeta.columns.filter(c => c.isPk).map(c => c.name) : [];
+            const useRowId = pkCols.length === 0;
+            const selectCols = useRowId ? `rowid as __rowid__, *` : `*`;
+            
+            try {
+                const query = `SELECT ${selectCols} FROM "${currentEditorTable}" LIMIT ${ROWS_PER_PAGE} OFFSET ${offset}`;
+                const results = currentDb.exec(query);
+                
+                if (results.length === 0) {
+                    gridDiv.innerHTML = `
+                        <div class="empty-state" style="margin-top: 50px;">
+                            <div class="empty-icon">📭</div>
+                            No data found in this table.
+                        </div>
+                    `;
+                    document.getElementById('pagination-info').innerText = `Page ${currentEditorPage + 1}`;
+                    return;
+                }
+                
+                let html = '<table class="data-grid"><thead><tr>';
+                const columns = results[0].columns;
+                const values = results[0].values;
+                
+                html += `<th style="width: 50px; text-align: center;">Actions</th>`;
+                columns.forEach(col => {
+                    if (useRowId && col === '__rowid__') return;
+                    html += `<th>${col}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                
+                values.forEach(row => {
+                    const rowObj = {};
+                    columns.forEach((col, idx) => rowObj[col] = row[idx]);
+                    
+                    let rowIdAttr = '';
+                    if (useRowId) {
+                        rowIdAttr = `data-rowid="${rowObj['__rowid__']}"`;
+                    } else {
+                        const pkObj = {};
+                        pkCols.forEach(pk => pkObj[pk] = rowObj[pk]);
+                        rowIdAttr = `data-pk='${JSON.stringify(pkObj).replace(/'/g, "&#39;")}'`;
+                    }
+                    
+                    html += `<tr ${rowIdAttr}>`;
+                    html += `<td style="text-align: center;"><button class="action-btn" onclick="deleteRecord(this)" title="Delete Row">🗑️</button></td>`;
+                    
+                    columns.forEach((col, idx) => {
+                        if (useRowId && col === '__rowid__') return;
+                        const val = row[idx];
+                        html += `<td class="editable" contenteditable="true" data-col="${col}" data-original="${val !== null ? String(val).replace(/"/g, '&quot;') : ''}" onblur="cellBlurred(this)">${val !== null ? String(val).replace(/</g, "&lt;").replace(/>/g, "&gt;") : '<em style="color:#71717a">null</em>'}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                
+                gridDiv.innerHTML = html;
+                document.getElementById('pagination-info').innerText = `Page ${currentEditorPage + 1}`;
+                
+            } catch (err) {
+                gridDiv.innerHTML = `<div class="error-msg"><strong>Error:</strong> ${err.message}</div>`;
+            }
+        }
+        
+        function cellBlurred(cell) {
+            let newVal = cell.innerText.trim();
+            if (newVal === 'null' && cell.innerHTML.includes('em')) newVal = null; 
+            
+            const origVal = cell.getAttribute('data-original');
+            if (newVal === origVal || (newVal === null && origVal === '')) return;
+            
+            const colName = cell.getAttribute('data-col');
+            const tr = cell.closest('tr');
+            const useRowId = tr.hasAttribute('data-rowid');
+            
+            let whereClause = '';
+            if (useRowId) {
+                whereClause = `rowid = ${tr.getAttribute('data-rowid')}`;
+            } else {
+                const pks = JSON.parse(tr.getAttribute('data-pk'));
+                whereClause = Object.keys(pks).map(k => `"${k}" = ${escapeSqlValue(pks[k])}`).join(' AND ');
+            }
+            
+            try {
+                const valSql = escapeSqlValue(newVal);
+                const query = `UPDATE "${currentEditorTable}" SET "${colName}" = ${valSql} WHERE ${whereClause}`;
+                currentDb.exec(query);
+                cell.setAttribute('data-original', newVal || '');
+            } catch (err) {
+                alert("Update failed: " + err.message);
+                cell.innerText = origVal !== '' ? origVal : 'null';
+            }
+        }
+        
+        function deleteRecord(btn) {
+            if (!confirm("Are you sure you want to delete this row?")) return;
+            
+            const tr = btn.closest('tr');
+            const useRowId = tr.hasAttribute('data-rowid');
+            
+            let whereClause = '';
+            if (useRowId) {
+                whereClause = `rowid = ${tr.getAttribute('data-rowid')}`;
+            } else {
+                const pks = JSON.parse(tr.getAttribute('data-pk'));
+                whereClause = Object.keys(pks).map(k => `"${k}" = ${escapeSqlValue(pks[k])}`).join(' AND ');
+            }
+            
+            try {
+                const query = `DELETE FROM "${currentEditorTable}" WHERE ${whereClause}`;
+                currentDb.exec(query);
+                tr.remove();
+            } catch (err) {
+                alert("Delete failed: " + err.message);
+            }
+        }
+        
+        function addRow() {
+            if (!currentDb || !currentEditorTable) return;
+            try {
+                currentDb.exec(`INSERT INTO "${currentEditorTable}" DEFAULT VALUES`);
+                loadTableData();
+            } catch (err) {
+                alert("Failed to insert default row: " + err.message);
+            }
+        }
+        
+        function prevPage() {
+            if (currentEditorPage > 0) {
+                currentEditorPage--;
+                loadTableData();
+            }
+        }
+        
+        function nextPage() {
+            currentEditorPage++;
+            loadTableData();
+        }
+        
+        function escapeSqlValue(val) {
+            if (val === null || val === 'null' || val === undefined) return 'NULL';
+            if (typeof val === 'number') return val;
+            return `'${String(val).replace(/'/g, "''")}'`;
+        }
+
+        function runQuery() {
+            if (!currentDb) return;
+            
+            const queryInput = document.getElementById('query-input').value.trim();
+            const resultsDiv = document.getElementById('query-results');
+            
+            if (!queryInput) {
+                resultsDiv.innerHTML = `
+                    <div class="empty-state" style="margin-top: 50px;">
+                        <div class="empty-icon">⚠️</div>
+                        Please enter a SQL query.
+                    </div>
+                `;
+                return;
+            }
+            
+            try {
+                const results = currentDb.exec(queryInput);
+                
+                if (results.length === 0) {
+                    resultsDiv.innerHTML = `
+                        <div class="empty-state" style="margin-top: 50px;">
+                            <div class="empty-icon">✅</div>
+                            Query executed successfully. (No results returned)
+                        </div>
+                    `;
+                    // Refresh schema in case of DDL changes
+                    if (queryInput.toUpperCase().includes('CREATE') || 
+                        queryInput.toUpperCase().includes('DROP') || 
+                        queryInput.toUpperCase().includes('ALTER')) {
+                        parseDatabase(currentDb, "Modified DB");
+                    }
+                    return;
+                }
+                
+                let html = '<table class="results-table"><thead><tr>';
+                const columns = results[0].columns;
+                const values = results[0].values;
+                
+                columns.forEach(col => {
+                    html += `<th>${col}</th>`;
+                });
+                html += '</tr></thead><tbody>';
+                
+                values.forEach(row => {
+                    html += '<tr>';
+                    row.forEach(cell => {
+                        html += `<td>${cell !== null ? String(cell).replace(/</g, "&lt;").replace(/>/g, "&gt;") : '<em>null</em>'}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</tbody></table>';
+                
+                resultsDiv.innerHTML = html;
+                
+            } catch (err) {
+                resultsDiv.innerHTML = `
+                    <div class="error-msg">
+                        <strong>Error:</strong> ${err.message}
+                    </div>
+                `;
+            }
+        }
+        
+        function exportDatabase() {
+            if (!currentDb) return;
+            
+            try {
+                const binaryArray = currentDb.export();
+                const blob = new Blob([binaryArray], {type: "application/x-sqlite3"});
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement("a");
+                a.href = url;
+                a.download = "modified_database.sqlite";
+                document.body.appendChild(a);
+                a.click();
+                
+                setTimeout(function() {
+                    document.body.removeChild(a);
+                    window.URL.revokeObjectURL(url);  
+                }, 0);
+            } catch (err) {
+                alert("Failed to export database: " + err.message);
+            }
         }
     </script>
 </body>
